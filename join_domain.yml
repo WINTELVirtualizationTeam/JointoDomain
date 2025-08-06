@@ -1,0 +1,47 @@
+---
+- name: Join RHEL servers to Active Directory and configure group-based login
+  hosts: domain-servers
+  become: true
+  vars:
+    domain_name: ubagroup.com
+    ad_admin_user: your_ad_admin
+    ad_admin_pass: your_ad_password
+    allowed_group: WintelVirtualizationteam@ubagroup.com
+ 
+  tasks:
+    - name: Install required packages
+      package:
+        name:
+          - realmd
+          - sssd
+          - oddjob
+          - oddjob-mkhomedir
+          - adcli
+          - samba-common
+          - samba-common-tools
+          - krb5-workstation
+        state: present
+ 
+    - name: Discover the domain
+      command: realm discover {{ domain_name }}
+      register: realm_discovery
+      changed_when: false
+      failed_when: realm_discovery.rc != 0
+ 
+    - name: Join the domain
+      expect:
+        command: realm join --user={{ ad_admin_user }} {{ domain_name }}
+        responses:
+          Password: "{{ ad_admin_pass }}"
+      register: join_result
+      changed_when: "'successfully enrolled' in join_result.stdout"
+ 
+    - name: Permit AD group to login
+      command: realm permit -g {{ allowed_group }}
+ 
+    - name: Enable auto home directory creation
+      command: authconfig --enablemkhomedir --update
+ 
+    - name: Test AD user resolution
+      command: id test_user@{{ domain_name }}
+      ignore_errors: true
