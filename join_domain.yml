@@ -10,7 +10,7 @@
 
     domain_user: 'WINTEL@UBAGROUP.COM'
 
-    domain_password: 'VMwar3!!vmwar3!!'
+    domain_password: '{{vault_domain_password}}'
 
     domain: 'ubagroup.com'
 
