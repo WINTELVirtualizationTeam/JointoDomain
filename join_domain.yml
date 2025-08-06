@@ -1,47 +1,130 @@
 ---
-- name: Join RHEL servers to Active Directory and configure group-based login
-  hosts: domain-servers
-  become: true
+
+- name: Join RHEL server to Active Directory domain using root
+
+  hosts: all
+
+  gather_facts: true
+
   vars:
-    domain_name: ubagroup.com
-    ad_admin_user: your_ad_admin
-    ad_admin_pass: your_ad_password
-    allowed_group: WintelVirtualizationteam@ubagroup.com
+
+    domain_user: 'WINTEL@UBAGROUP.COM'
+
+    domain_password: '{{ vault_domain_password }}'
+
+    domain: 'ubagroup.com'
+
+    realm: 'UBAGROUP.COM'
+
+    ad_group: 'wintelvirtualizationteam'
  
   tasks:
-    - name: Install required packages
+
+    - name: Ensure required packages are installed
+
       package:
+
         name:
+
           - realmd
+
           - sssd
+
           - oddjob
+
           - oddjob-mkhomedir
+
           - adcli
+
           - samba-common
+
           - samba-common-tools
+
           - krb5-workstation
+
+          - sssd-tools
+
         state: present
  
+    - name: Ensure NTP is installed and enabled
+
+      package:
+
+        name: chrony
+
+        state: present
+ 
+    - name: Enable and start chronyd
+
+      systemd:
+
+        name: chronyd
+
+        state: started
+
+        enabled: true
+ 
     - name: Discover the domain
-      command: realm discover {{ domain_name }}
-      register: realm_discovery
+
+      command: realm discover {{ domain }}
+
+      register: realm_discover
+
       changed_when: false
-      failed_when: realm_discovery.rc != 0
  
-    - name: Join the domain
+    - name: Join the server to the domain
+
       expect:
-        command: realm join --user={{ ad_admin_user }} {{ domain_name }}
+
+        command: realm join -U {{ domain_user }} {{ domain }}
+
         responses:
-          Password: "{{ ad_admin_pass }}"
-      register: join_result
-      changed_when: "'successfully enrolled' in join_result.stdout"
+
+          Password for {{ domain_user }}: "{{ domain_password }}"
+
+      register: join_output
+
+      no_log: true
  
-    - name: Permit AD group to login
-      command: realm permit -g {{ allowed_group }}
+    - name: Permit AD group to log in
+
+      command: realm permit -g {{ ad_group }}
+
+      when: join_output.rc == 0
  
-    - name: Enable auto home directory creation
-      command: authconfig --enablemkhomedir --update
+    - name: Ensure SSSD service is enabled and running
+
+      systemd:
+
+        name: sssd
+
+        state: started
+
+        enabled: true
  
-    - name: Test AD user resolution
-      command: id test_user@{{ domain_name }}
-      ignore_errors: true
+    - name: Configure mkhomedir to create home dirs on login
+
+      lineinfile:
+
+        path: /etc/sssd/sssd.conf
+
+        regexp: '^.*pam_mkhomedir.so.*'
+
+        line: 'session optional pam_mkhomedir.so skel=/etc/skel/ umask=0077'
+
+        insertafter: '[pam]'
+
+        create: yes
+
+      notify: restart sssd
+ 
+  handlers:
+
+    - name: restart sssd
+
+      systemd:
+
+        name: sssd
+
+        state: restarted
+ 
