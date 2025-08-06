@@ -84,7 +84,6 @@
 
       register: join_output
 
-      no_log: true
  
     - name: Permit AD group to log in
 
