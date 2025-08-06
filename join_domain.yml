@@ -72,17 +72,17 @@
 
       changed_when: false
  
-    - name: Join the server to the domain
+    #- name: Join the server to the domain
 
-      expect:
+     # expect:
 
-        command: realm join -U {{ domain_user }} {{ domain }}
+      #  command: realm join -U {{ domain_user }} {{ domain }}
 
-        responses:
+       # responses:
 
-          Password for {{ domain_user }}: "{{ domain_password }}"
+        #  Password for {{ domain_user }}: "{{ domain_password }}"
 
-      register: join_output
+     # register: join_output
 
  
     - name: Permit AD group to log in
