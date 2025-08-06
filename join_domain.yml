@@ -89,7 +89,7 @@
 
       command: realm permit -g {{ ad_group }}
 
-      when: join_output.rc == 0
+     # when: join_output.rc == 0
  
     - name: Ensure SSSD service is enabled and running
 
