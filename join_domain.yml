@@ -8,7 +8,7 @@
 
   vars:
 
-    domain_user: 'WINTEL@UBAGROUP.COM'
+    domain_user: 'alukotaiwo@UBAGROUP.COM'
 
     domain_password: '{{vault_domain_password}}'
 
