@@ -61,8 +61,16 @@
         name: chronyd
 
         state: started
-
         enabled: true
+
+    - name: Enable and start oddjobd service
+      systemd:
+        name: oddjobd
+        state: started
+        enabled: true
+      become: yes
+
+        
  
     - name: Discover the domain
       command: realm discover {{ domain }}
@@ -72,7 +80,7 @@
 
  
     - name: Join the server to the domain
-      shell: echo '{{ domain_password }}' | realm join -U {{ domain_user }} {{ domain }} --stdin-password
+      shell: echo '{{ domain_password }}' | realm join --user={{ domain_user }} {{ domain }} --stdin-password
       become: yes
       register: realm_join
       failed_when: false
