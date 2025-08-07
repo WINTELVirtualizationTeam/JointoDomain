@@ -74,8 +74,12 @@
     - name: Join the server to the domain
       shell: echo '{{ domain_password }}' | realm join -U {{ domain_user }} {{ dmaoin }} --stdin-password
       become: yes
-      no_log: yes
       register: realm_join
+      failed_when: false
+
+    - name: show what happened during join
+      debug:
+        var: realm_join
 
       
        #realm join -U {{ domain_user }} {{ domain }}
