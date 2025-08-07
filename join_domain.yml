@@ -71,25 +71,21 @@
       register: realm_discover
 
       changed_when: false
+
  
-    #- name: Join the server to the domain
-
-     # expect:
-
-      #  command: realm join -U {{ domain_user }} {{ domain }}
-
-       # responses:
-
-        #  Password for {{ domain_user }}: "{{ domain_password }}"
-
-     # register: join_output
-
+    - name: Join the server to the domain
+      command: >
+       realm join -U {{ domain_user }} {{ domain }}
+      args:
+        stdin: "{{ domain_password }}"
+      register: realm_join
  
     - name: Permit AD group to log in
 
       command: realm permit -g {{ ad_group }}
 
      # when: join_output.rc == 0
+ 
  
     - name: Ensure SSSD service is enabled and running
 
