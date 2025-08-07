@@ -77,9 +77,9 @@
       register: realm_join
       failed_when: false
 
-    - name: show what happened during join
-      debug:
-        var: realm_join
+    - #name: show what happened during join
+      #debug:
+        #var: realm_join
 
       
        #realm join -U {{ domain_user }} {{ domain }}
@@ -91,7 +91,6 @@
     - name: Permit AD group to log in
       command: realm permit -g {{ ad_group }}
       become: yes
-      when: realm_join.rc == 0
  
  
     - name: Ensure SSSD service is enabled and running
