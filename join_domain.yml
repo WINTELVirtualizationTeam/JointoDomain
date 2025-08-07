@@ -65,26 +65,29 @@
         enabled: true
  
     - name: Discover the domain
-
       command: realm discover {{ domain }}
-
+      become: yes
       register: realm_discover
-
       changed_when: false
 
  
     - name: Join the server to the domain
-      command: >
-       realm join -U {{ domain_user }} {{ domain }}
-      args:
-        stdin: "{{ domain_password }}"
+      shell: echo '{{ domain_password }}' | realm join -U {{ domain_user }} {{ dmaoin }} --stdin-password
+      become: yes
+      no_log: yes
       register: realm_join
+
+      
+       #realm join -U {{ domain_user }} {{ domain }}
+      #args:
+       # stdin: "{{ domain_password }}"
+      #become: yes
+     # register: realm_join
  
     - name: Permit AD group to log in
-
       command: realm permit -g {{ ad_group }}
-
-     # when: join_output.rc == 0
+      become: yes
+      when: realm_join.rc == 0
  
  
     - name: Ensure SSSD service is enabled and running
